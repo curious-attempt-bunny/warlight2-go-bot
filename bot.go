@@ -86,7 +86,7 @@ func main() {
         } else if parts[0] == "update_map" {
             for _, region := range state.regions {
                 if region.owner == "us" {
-                    region.owner = "them"                    
+                    region.owner = "them"
                 }
             }
 
@@ -117,8 +117,34 @@ func main() {
             our_regions := ourRegions(state)
             region := our_regions[0]
             fmt.Printf("%s place_armies %d %d,\n", our_name, region.id, state.starting_armies)
+            region.armies += state.starting_armies
         } else if strings.Index(line, "go attack/transfer") == 0 {
-            fmt.Println("No moves")
+            var attack_from *Region
+            var attack_to *Region
+            attack_from = nil
+            attack_to = nil
+            for _, region := range ourRegions(state) {
+                for _, neighbour := range region.neighbours {
+                    // fmt.Fprintf(os.Stderr, "%d (%d - %s) -> %d (%d -%s)\n",
+                        // region.id, region.armies, region.owner,
+                        // neighbour.id, neighbour.armies, neighbour.owner)
+                    if neighbour.owner != "us" {
+                        if region.armies >= 5 + neighbour.armies {
+                            if attack_to == nil || neighbour.armies > attack_to.armies {
+                                attack_to = neighbour
+                                attack_from = region
+                            }
+                        }
+                    }
+                }
+            }
+
+            if attack_from == nil {
+                fmt.Println("No moves")
+            } else {
+                fmt.Printf("%s attack/transfer %d %d %d\n",
+                    our_name, attack_from.id, attack_to.id, attack_from.armies - 1)
+            }
         } else {
             fmt.Fprintf(os.Stderr, "Don't recognire: "+line+"\n")
         }
@@ -136,7 +162,7 @@ type State struct {
 func ourRegions(state State) []*Region {
     result := []*Region{}
 
-    fmt.Fprintf(os.Stderr, "ourRegions: %d\n", len(state.regions))
+    // fmt.Fprintf(os.Stderr, "ourRegions: %d\n", len(state.regions))
     for _, region := range state.regions {
         // fmt.Fprintf(os.Stderr, "%d %s\n", region.id, region.owner)
         if region.owner == "us" {
