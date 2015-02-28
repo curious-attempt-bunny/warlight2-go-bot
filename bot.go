@@ -69,6 +69,13 @@ func main() {
                         neighbour.neighbours = append(neighbour.neighbours, region)
                     }
                 }
+            } else if parts[1] == "wastelands" {
+                for i := 2; i < len(parts); i++ {
+                    region_id, _ := strconv.ParseInt(parts[i], 10, 0)
+
+                    region := state.regions[region_id]
+                    region.armies = 6
+                }
             }
         } else if parts[0] == "pick_starting_region" {
             // pick the first one
