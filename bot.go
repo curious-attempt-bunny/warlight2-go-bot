@@ -43,6 +43,32 @@ func main() {
 
                     state.super_regions[id] = SuperRegion{id: id, reward: reward}
                 }
+            } else if parts[1] == "regions" {
+                state.regions = make(map[int64]Region)
+                for i := 2; i < len(parts); i += 2 {
+                    region_id, _ := strconv.ParseInt(parts[i], 10, 0)
+                    super_region_id, _ := strconv.ParseInt(parts[i+1], 10, 0)
+
+                    super_region := state.super_regions[super_region_id]
+                    region := Region{id: region_id, owner: "neutral", super_region: super_region, armies: 2}
+                    state.regions[region_id] = region
+                    super_region.regions = append(super_region.regions, region)
+                }
+            } else if parts[1] == "neighbors" {
+                for i := 2; i < len(parts); i += 2 {
+                    region_id, _ := strconv.ParseInt(parts[i], 10, 0)
+                    neighbour_ids := strings.Split(parts[i+1], ",")
+
+                    region := state.regions[region_id]
+                    region.neighbours = []Region{}
+
+                    for _, neighbour_id := range neighbour_ids {
+                        id, _ := strconv.ParseInt(neighbour_id, 10, 0)
+                        neighbour := state.regions[id]
+                        region.neighbours = append(region.neighbours, neighbour)
+                        neighbour.neighbours = append(neighbour.neighbours, region)
+                    }
+                }
             }
         } else if parts[0] == "pick_starting_region" {
             // pick the first one
@@ -66,15 +92,16 @@ func main() {
 }
 
 type State struct {
-    regions map[int]Region
+    regions map[int64]Region
     super_regions map[int64]SuperRegion
 }
 
 type Region struct {
-    id int
+    id int64
+    super_region SuperRegion
     neighbours []Region
     owner string
-    super_region SuperRegion
+    armies int64
 }
 
 type SuperRegion struct {
