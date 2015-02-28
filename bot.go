@@ -4,12 +4,15 @@ import "os"
 import "fmt"
 import "bufio"
 import "strings"
+import "strconv"
 
 func main() {
     reader := bufio.NewReader(os.Stdin)
 
     for {
         line, err := reader.ReadString('\n')
+        state := State{}
+
         // our_name := ""
         // their_name := ""
 
@@ -32,7 +35,15 @@ func main() {
                 // their_name = parts[2]
             }
         } else if parts[0] == "setup_map" {
+            if parts[1] == "super_regions" {
+                state.super_regions = make(map[int64]SuperRegion)
+                for i := 2; i < len(parts); i += 2 {
+                    id, _ := strconv.ParseInt(parts[i], 10, 0)
+                    reward, _ := strconv.ParseInt(parts[i+1], 10, 0)
 
+                    state.super_regions[id] = SuperRegion{id: id, reward: reward}
+                }
+            }
         } else if parts[0] == "pick_starting_region" {
             // pick the first one
             fmt.Println(parts[2])
@@ -52,4 +63,22 @@ func main() {
             fmt.Fprintf(os.Stderr, "Don't recognire: "+line+"\n")
         }
     }
+}
+
+type State struct {
+    regions map[int]Region
+    super_regions map[int64]SuperRegion
+}
+
+type Region struct {
+    id int
+    neighbours []Region
+    owner string
+    super_region SuperRegion
+}
+
+type SuperRegion struct {
+    id int64
+    regions []Region
+    reward int64
 }
