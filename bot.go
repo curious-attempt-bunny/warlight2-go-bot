@@ -88,8 +88,30 @@ func main() {
                 }
             }
         } else if parts[0] == "pick_starting_region" {
-            // pick the first one
-            fmt.Println(parts[2])
+            var selected *Region
+            selected = nil
+            var selected_value float32
+            selected_value = 0
+
+            weighting := []float32{1,1,2,3,5,7,9,11,13,15,17,19}
+
+            for i := 2; i < len(parts); i++ {
+                region_id, _ := strconv.ParseInt(parts[i], 10, 0)
+                region := state.regions[region_id]
+                var armies int64
+                armies = -2 // account for the one that is claimed
+                for _, r := range region.super_region.regions {
+                    armies += r.armies
+                }
+                value := float32(region.super_region.reward) / weighting[armies/2]
+
+                if selected == nil || value > selected_value {
+                    selected = region
+                    selected_value = value
+                }
+            }
+
+            fmt.Printf("%d\n", selected.id)
         } else if parts[0] == "update_map" {
             for _, region := range state.regions {
                 if region.owner == "us" {
