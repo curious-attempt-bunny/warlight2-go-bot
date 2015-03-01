@@ -153,33 +153,57 @@ func main() {
             //     last_placements[0].region.id, last_placements[0].armies)
 
         } else if strings.Index(line, "go attack/transfer") == 0 {
-            var attack_from *Region
-            var attack_to *Region
-            attack_from = nil
-            attack_to = nil
-            for _, region := range ourRegions(state) {
-                for _, neighbour := range region.neighbours {
-                    // fmt.Fprintf(os.Stderr, "%d (%d - %s) -> %d (%d - %s)\n",
-                    //     region.id, region.armies, region.owner,
-                    //     neighbour.id, neighbour.armies, neighbour.owner)
-                    if neighbour.owner != "us" {
-                        if region.armies >= 5 + neighbour.armies {
-                            if attack_to == nil ||
-                                (neighbour.armies > attack_to.armies) ||
-                                (neighbour.armies == attack_to.armies && region.armies > attack_from.armies) {
-                                attack_to = neighbour
-                                attack_from = region
+            attacks := []Attack{}
+            used := make(map[int64]bool)
+            for {
+                var attack_from *Region
+                var attack_to *Region
+                attack_from = nil
+                attack_to = nil
+                for _, region := range ourRegions(state) {
+                    if used[region.id] {
+                        continue;
+                    }
+                    for _, neighbour := range region.neighbours {
+                        if used[neighbour.id] {
+                            continue;
+                        }
+                        // fmt.Fprintf(os.Stderr, "%d (%d - %s) -> %d (%d - %s)\n",
+                        //     region.id, region.armies, region.owner,
+                        //     neighbour.id, neighbour.armies, neighbour.owner)
+                        if neighbour.owner != "us" {
+                            if region.armies >= 5 + neighbour.armies {
+                                if attack_to == nil ||
+                                    (neighbour.armies > attack_to.armies) ||
+                                    (neighbour.armies == attack_to.armies && region.armies > attack_from.armies) {
+                                    attack_to = neighbour
+                                    attack_from = region
+                                }
                             }
                         }
                     }
                 }
+
+                if attack_from == nil {
+                    break
+                } else {
+                    attacks = append(attacks, Attack{
+                        region_from: attack_from,
+                        region_to: attack_to,
+                        armies: attack_from.armies-1})
+                    used[attack_from.id] = true
+                    used[attack_to.id] = true
+                }
             }
 
-            if attack_from == nil {
+            if len(attacks) == 0 {
                 fmt.Println("No moves")
             } else {
-                fmt.Printf("%s attack/transfer %d %d %d\n",
-                    our_name, attack_from.id, attack_to.id, attack_from.armies - 1)
+                for _, attack := range attacks {
+                    fmt.Printf("%s attack/transfer %d %d %d,",
+                        our_name, attack.region_from.id, attack.region_to.id, attack.armies)
+                }
+                fmt.Println()
             }
         } else {
             fmt.Fprintf(os.Stderr, "Don't recognire: "+line+"\n")
@@ -249,5 +273,11 @@ type SuperRegion struct {
 
 type Placement struct {
     region *Region
+    armies int64
+}
+
+type Attack struct {
+    region_from *Region
+    region_to *Region
     armies int64
 }
