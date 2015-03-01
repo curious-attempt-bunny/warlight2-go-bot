@@ -145,7 +145,10 @@ func main() {
             }
         } else if strings.Index(line, "go place_armies") == 0 {
             // fmt.Println("No moves")
-            our_regions := ourBorderRegions(state)
+            our_regions := ourBorderRegionsWithTheEnemy(state)
+            if len(our_regions) == 0 {
+                our_regions = ourBorderRegions(state)
+            }
             region := our_regions[0]
             fmt.Printf("%s place_armies %d %d,\n", our_name, region.id, state.starting_armies)
             region.armies += state.starting_armies
@@ -155,7 +158,7 @@ func main() {
             //     last_placements[0].region.id, last_placements[0].armies)
 
         } else if strings.Index(line, "go attack/transfer") == 0 {
-            fmt.Fprintf(os.Stderr, "Attacks:\n")
+            // fmt.Fprintf(os.Stderr, "Attacks:\n")
             attacks := []Attack{}
 
             move_to := ourBorderRegions(state)
@@ -230,10 +233,10 @@ func main() {
                                     attackable = false // never attack neutral when enemy is present
                                 }
                             }
-                            fmt.Fprintf(os.Stderr, "%d (%d - %s) -> %d (%d - %s) attackable %t value %d best_value %d\n",
-                                region.id, region.armies, region.owner,
-                                neighbour.id, neighbour.armies, neighbour.owner,
-                                attackable, candidate_value, value)
+                            // fmt.Fprintf(os.Stderr, "%d (%d - %s) -> %d (%d - %s) attackable %t value %d best_value %d\n",
+                            //     region.id, region.armies, region.owner,
+                            //     neighbour.id, neighbour.armies, neighbour.owner,
+                            //     attackable, candidate_value, value)
                             if attackable {
                                 if attack_to == nil ||
                                     (candidate_value >= value) ||
@@ -306,6 +309,30 @@ func ourBorderRegions(state State) []*Region {
             borders := false
             for _, neighbour := range region.neighbours {
                 if neighbour.owner != "us" {
+                    borders = true
+                    break
+                }
+            }
+
+            if borders {
+                result = append(result, region)
+            }
+        }
+    }
+
+    return result
+}
+
+func ourBorderRegionsWithTheEnemy(state State) []*Region {
+    result := []*Region{}
+
+    // fmt.Fprintf(os.Stderr, "ourRegions: %d\n", len(state.regions))
+    for _, region := range state.regions {
+        // fmt.Fprintf(os.Stderr, "%d %s\n", region.id, region.owner)
+        if region.owner == "us" {
+            borders := false
+            for _, neighbour := range region.neighbours {
+                if neighbour.owner == "them" {
                     borders = true
                     break
                 }
