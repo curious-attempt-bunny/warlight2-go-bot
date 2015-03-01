@@ -205,6 +205,14 @@ func main() {
                     if used[region.id] {
                         continue;
                     }
+                    bordering_enemy := false
+                    for _, neighbour := range region.neighbours {
+                        if neighbour.owner == "them" {
+                            bordering_enemy = true
+                            break
+                        }
+                    }
+
                     for _, neighbour := range region.neighbours {
                         if used[neighbour.id] {
                             continue;
@@ -217,7 +225,10 @@ func main() {
                             attackable := region.armies >= 5 + neighbour.armies
                             if neighbour.owner == "neutral" {
                                 attackable = (region.armies >= 3 && neighbour.armies == 1) ||
-                                    region.armies >= 2*neighbour.armies
+                                    (region.armies > 2 && region.armies >= 2*neighbour.armies)
+                                if bordering_enemy {
+                                    attackable = false // never attack neutral when enemy is present
+                                }
                             }
                             fmt.Fprintf(os.Stderr, "%d (%d - %s) -> %d (%d - %s) attackable %t value %d best_value %d\n",
                                 region.id, region.armies, region.owner,
