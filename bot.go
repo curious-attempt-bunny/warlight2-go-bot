@@ -143,7 +143,7 @@ func main() {
             }
         } else if strings.Index(line, "go place_armies") == 0 {
             // fmt.Println("No moves")
-            our_regions := ourRegions(state)
+            our_regions := ourBorderRegions(state)
             region := our_regions[0]
             fmt.Printf("%s place_armies %d %d,\n", our_name, region.id, state.starting_armies)
             region.armies += state.starting_armies
@@ -164,7 +164,9 @@ func main() {
                     //     neighbour.id, neighbour.armies, neighbour.owner)
                     if neighbour.owner != "us" {
                         if region.armies >= 5 + neighbour.armies {
-                            if attack_to == nil || neighbour.armies > attack_to.armies {
+                            if attack_to == nil ||
+                                (neighbour.armies > attack_to.armies) ||
+                                (neighbour.armies == attack_to.armies && region.armies > attack_from.armies) {
                                 attack_to = neighbour
                                 attack_from = region
                             }
@@ -201,6 +203,30 @@ func ourRegions(state State) []*Region {
         // fmt.Fprintf(os.Stderr, "%d %s\n", region.id, region.owner)
         if region.owner == "us" {
             result = append(result, region)
+        }
+    }
+
+    return result
+}
+
+func ourBorderRegions(state State) []*Region {
+    result := []*Region{}
+
+    // fmt.Fprintf(os.Stderr, "ourRegions: %d\n", len(state.regions))
+    for _, region := range state.regions {
+        // fmt.Fprintf(os.Stderr, "%d %s\n", region.id, region.owner)
+        if region.owner == "us" {
+            borders := false
+            for _, neighbour := range region.neighbours {
+                if neighbour.owner != "us" {
+                    borders = true
+                    break
+                }
+            }
+
+            if borders {
+                result = append(result, region)
+            }
         }
     }
 
