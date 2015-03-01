@@ -11,6 +11,7 @@ func TestBot(t *testing.T) {
   test(t, "tests/Attacks.txt")
   test(t, "tests/AttackNeutralWhenItWouldWin.txt")
   test(t, "tests/PlaceNextToTheEnemyFirst.txt")
+  test(t, "tests/DontCrashPickingStartingRegions.txt")
 }
 
 func test(t *testing.T, filename string) {

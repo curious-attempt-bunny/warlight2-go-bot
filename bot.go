@@ -5,6 +5,7 @@ import "fmt"
 import "bufio"
 import "strings"
 import "strconv"
+import "math"
 
 func main() {
     reader := bufio.NewReader(os.Stdin)
@@ -90,10 +91,8 @@ func main() {
         } else if parts[0] == "pick_starting_region" {
             var selected *Region
             selected = nil
-            var selected_value float32
+            var selected_value float64
             selected_value = 0
-
-            weighting := []float32{1,1,2,3,5,7,9,11,13,15,17,19}
 
             for i := 2; i < len(parts); i++ {
                 region_id, _ := strconv.ParseInt(parts[i], 10, 0)
@@ -103,7 +102,15 @@ func main() {
                 for _, r := range region.super_region.regions {
                     armies += r.armies
                 }
-                value := float32(region.super_region.reward) / weighting[armies/2]
+                // 2 armies -> 1
+                // 4 armies -> 2
+                // 6 armies -> 4
+                // 8 armies -> 5
+                weighting := math.Floor(float64(armies)/2.0)
+                if armies >= 6 {
+                    weighting += 1
+                }
+                value := float64(region.super_region.reward) / weighting
 
                 if selected == nil || value > selected_value {
                     selected = region
