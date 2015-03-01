@@ -1,3 +1,3 @@
 #!/bin/sh
 
-zip bot.zip *.go
+zip bot.zip bot.go

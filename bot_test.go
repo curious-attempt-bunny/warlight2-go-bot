@@ -9,6 +9,7 @@ import "io/ioutil"
 
 func TestBot(t *testing.T) {
   test(t, "tests/Attacks.txt")
+  test(t, "tests/AttackTheStrongestTarget.txt")
 }
 
 func test(t *testing.T, filename string) {
@@ -25,7 +26,7 @@ func test(t *testing.T, filename string) {
   }
 
   if !valid {
-    t.Errorf("Actual: %s. Expected: %s", actual, strings.Join(expected, " OR "))
+    t.Errorf("%s: Actual: %s. Expected: %s", filename, actual, strings.Join(expected, " OR "))
   }
 }
 

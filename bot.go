@@ -11,6 +11,7 @@ func main() {
 
     state := State{}
     our_name := ""
+    last_placements := []Placement{}
     // their_name := ""
 
     for {
@@ -21,6 +22,8 @@ func main() {
         }
 
         line = strings.TrimSpace(line)
+
+        // fmt.Fprintf(os.Stderr, ">> "+line+"\n")
 
         parts := strings.Split(line, " ")
 
@@ -53,7 +56,12 @@ func main() {
                     super_region_id, _ := strconv.ParseInt(parts[i+1], 10, 0)
 
                     super_region := state.super_regions[super_region_id]
-                    region := &Region{id: region_id, owner: "neutral", super_region: super_region, armies: 2}
+                    region := &Region{
+                        id: region_id,
+                        owner: "neutral",
+                        super_region: super_region,
+                        armies: 2,
+                        neighbours: []*Region{} }
                     state.regions[region_id] = region
                     super_region.regions = append(super_region.regions, region)
                 }
@@ -63,7 +71,6 @@ func main() {
                     neighbour_ids := strings.Split(parts[i+1], ",")
 
                     region := state.regions[region_id]
-                    region.neighbours = []*Region{}
 
                     for _, neighbour_id := range neighbour_ids {
                         id, _ := strconv.ParseInt(neighbour_id, 10, 0)
@@ -111,13 +118,40 @@ func main() {
         } else if parts[0] == "Round" {
             // ignore this
         } else if strings.Index(line, "Output from your bot: ") == 0 {
+            command := line[len("Output from your bot: ")+1:len(line)-1]
+            // fmt.Fprintf(os.Stderr, "Output: "+command+"\n")
+            parts = strings.Split(command, " ")
+            if len(parts) > 2 && parts[1] == "place_armies" {
+                for _, placement := range last_placements {
+                    // fmt.Fprintf(os.Stderr, "Removing calculated placement at %d of %d armies\n",
+                        // placement.region.id, placement.armies)
+                    state.regions[placement.region.id].armies -= placement.armies
+                }
 
+                for i := 0; i < len(parts); i += 4 {
+                    if parts[i] != our_name || parts[i+1] != "place_armies" {
+                        break
+                    }
+                    region_id, _ := strconv.ParseInt(parts[i+2], 10, 0)
+                    armies, _ := strconv.ParseInt(parts[i+3][0:len(parts[i+3])-1], 10, 0)
+
+                    state.regions[region_id].armies += armies
+
+                    // fmt.Fprintf(os.Stderr, "Adding recorded placement at %d of %d armies\n",
+                    //     region_id, armies)
+                }
+            }
         } else if strings.Index(line, "go place_armies") == 0 {
             // fmt.Println("No moves")
             our_regions := ourRegions(state)
             region := our_regions[0]
             fmt.Printf("%s place_armies %d %d,\n", our_name, region.id, state.starting_armies)
             region.armies += state.starting_armies
+            last_placements = []Placement{}
+            last_placements = append(last_placements, Placement{region: region, armies: state.starting_armies})
+            // fmt.Fprintf(os.Stderr, "Adding calculated placement at %d of %d armies\n",
+            //     last_placements[0].region.id, last_placements[0].armies)
+
         } else if strings.Index(line, "go attack/transfer") == 0 {
             var attack_from *Region
             var attack_to *Region
@@ -125,9 +159,9 @@ func main() {
             attack_to = nil
             for _, region := range ourRegions(state) {
                 for _, neighbour := range region.neighbours {
-                    // fmt.Fprintf(os.Stderr, "%d (%d - %s) -> %d (%d -%s)\n",
-                        // region.id, region.armies, region.owner,
-                        // neighbour.id, neighbour.armies, neighbour.owner)
+                    // fmt.Fprintf(os.Stderr, "%d (%d - %s) -> %d (%d - %s)\n",
+                    //     region.id, region.armies, region.owner,
+                    //     neighbour.id, neighbour.armies, neighbour.owner)
                     if neighbour.owner != "us" {
                         if region.armies >= 5 + neighbour.armies {
                             if attack_to == nil || neighbour.armies > attack_to.armies {
@@ -185,4 +219,9 @@ type SuperRegion struct {
     id int64
     regions []*Region
     reward int64
+}
+
+type Placement struct {
+    region *Region
+    armies int64
 }
