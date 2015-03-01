@@ -9,7 +9,7 @@ import "io/ioutil"
 
 func TestBot(t *testing.T) {
   test(t, "tests/Attacks.txt")
-  test(t, "tests/AttackTheStrongestTarget.txt")
+  test(t, "tests/AttackNeutralWhenItWouldWin.txt")
 }
 
 func test(t *testing.T, filename string) {

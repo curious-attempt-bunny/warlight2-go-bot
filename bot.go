@@ -102,6 +102,8 @@ func main() {
                 who := ""
                 if parts[i+1] == our_name {
                     who = "us"
+                } else if parts[i+1] == "neutral" {
+                    who = "neutral"
                 } else {
                     who = "them"
                 }
@@ -153,13 +155,16 @@ func main() {
             //     last_placements[0].region.id, last_placements[0].armies)
 
         } else if strings.Index(line, "go attack/transfer") == 0 {
+            fmt.Fprintf(os.Stderr, "Attacks:\n")
             attacks := []Attack{}
             used := make(map[int64]bool)
             for {
                 var attack_from *Region
                 var attack_to *Region
+                var value int64
                 attack_from = nil
                 attack_to = nil
+                value = 0
                 for _, region := range ourRegions(state) {
                     if used[region.id] {
                         continue;
@@ -168,16 +173,27 @@ func main() {
                         if used[neighbour.id] {
                             continue;
                         }
-                        // fmt.Fprintf(os.Stderr, "%d (%d - %s) -> %d (%d - %s)\n",
-                        //     region.id, region.armies, region.owner,
-                        //     neighbour.id, neighbour.armies, neighbour.owner)
                         if neighbour.owner != "us" {
-                            if region.armies >= 5 + neighbour.armies {
+                            candidate_value := neighbour.armies
+                            if neighbour.owner == "neutral" {
+                                candidate_value = 0 // prefer attacking the enemy
+                            }
+                            attackable := region.armies >= 5 + neighbour.armies
+                            if neighbour.owner == "neutral" {
+                                attackable = (region.armies >= 3 && neighbour.armies == 1) ||
+                                    region.armies >= 2*neighbour.armies
+                            }
+                            fmt.Fprintf(os.Stderr, "%d (%d - %s) -> %d (%d - %s) attackable %t value %d best_value %d\n",
+                                region.id, region.armies, region.owner,
+                                neighbour.id, neighbour.armies, neighbour.owner,
+                                attackable, candidate_value, value)
+                            if attackable {
                                 if attack_to == nil ||
-                                    (neighbour.armies > attack_to.armies) ||
+                                    (candidate_value >= value) ||
                                     (neighbour.armies == attack_to.armies && region.armies > attack_from.armies) {
                                     attack_to = neighbour
                                     attack_from = region
+                                    value = candidate_value
                                 }
                             }
                         }
