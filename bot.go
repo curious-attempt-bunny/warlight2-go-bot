@@ -350,6 +350,63 @@ func main() {
                 }
             }
 
+            // --------- reinforcements along the neutral border
+
+            move_from := ourBorderRegionsWithNeutralOnly(state)
+            armiesPlaced := make(map[int64]int64)
+            for _, region := range move_from {
+                armiesPlaced[region.id] = region.armies
+            }
+
+            for _, region := range move_from {
+                if region.armies == 1 {
+                    continue
+                }
+
+                if armiesPlaced[region.id] > region.armies {
+                    continue // don't move armies if we've been reinforced
+                }
+
+                var best_destination *Region
+                best_destination = nil
+
+                for _, neighbour := range region.neighbours {
+                    if neighbour.owner != "us" {
+                        continue
+                    }
+
+                    if best_destination == nil || armiesPlaced[neighbour.id] >= region.armies {
+                        borders_something := false
+                        for _, n := range neighbour.neighbours {
+                            if n.owner != "us" {
+                                borders_something = true
+                                break
+                            }
+                        }
+
+                        if borders_something {
+                            best_destination = neighbour
+                        }
+                    }
+                }
+
+                if best_destination != nil {
+                    armies_to_move := region.armies - 1
+
+                    new_attacks := make([]Attack, len(attacks)+1)
+                    copy(new_attacks[1:], attacks[:])
+                    new_attacks[0] = Attack{
+                        region_from: region,
+                        region_to: best_destination,
+                        armies: armies_to_move}
+                    attacks = new_attacks
+
+                    region.armies -= armies_to_move
+                    armiesPlaced[best_destination.id] += armies_to_move
+
+                }
+            }
+
             if len(attacks) == 0 {
                 fmt.Println("No moves")
             } else {
@@ -427,6 +484,32 @@ func ourBorderRegionsWithTheEnemy(state State) []*Region {
             }
 
             if borders {
+                result = append(result, region)
+            }
+        }
+    }
+
+    return result
+}
+
+func ourBorderRegionsWithNeutralOnly(state State) []*Region {
+    result := []*Region{}
+
+    // fmt.Fprintf(os.Stderr, "ourRegions: %d\n", len(state.regions))
+    for _, region := range state.regions {
+        // fmt.Fprintf(os.Stderr, "%d %s\n", region.id, region.owner)
+        if region.owner == "us" {
+            borders_enemy := false
+            borders_neutral := false
+            for _, neighbour := range region.neighbours {
+                if neighbour.owner == "them" {
+                    borders_enemy = true
+                } else if neighbour.owner == "neutral" {
+                    borders_neutral = true
+                }
+            }
+
+            if !borders_enemy && borders_neutral {
                 result = append(result, region)
             }
         }
