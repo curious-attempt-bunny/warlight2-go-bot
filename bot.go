@@ -174,11 +174,32 @@ func main() {
             }
         } else if strings.Index(line, "go place_armies") == 0 {
             // fmt.Println("No moves")
+            border_owner := "them"
             our_regions := ourBorderRegionsWithTheEnemy(state)
             if len(our_regions) == 0 {
                 our_regions = ourBorderRegions(state)
+                border_owner = "neutral"
             }
-            region := our_regions[0]
+
+            var region *Region
+            region = nil
+            bordered_enemies := 0
+
+            for _, border_region := range our_regions {
+                bordered := 0
+                for _, neighbour := range border_region.neighbours {
+                    if neighbour.owner == border_owner {
+                        bordered += 1
+                    }
+                }
+
+                if region == nil || bordered > bordered_enemies ||
+                    (bordered == bordered_enemies && border_region.id > region.id) { // repeatability
+                    region = border_region
+                    bordered_enemies = bordered
+                }
+            }
+
             fmt.Printf("%s place_armies %d %d,\n", our_name, region.id, state.starting_armies)
             region.armies += state.starting_armies
             last_placements = []Placement{}
