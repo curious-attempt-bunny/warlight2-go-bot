@@ -17,6 +17,7 @@ func TestBot(t *testing.T) {
   test(t, "tests/OnlyAttackIfWeCanKillTheBiggestEnemyArmy.txt")
   test(t, "tests/AttackNeutralWithTheRequiredForceToWin.txt")
   test(t, "tests/MoveUnitsAroundOnTheNeutralBorder.txt")
+  test(t, "tests/WithMultipleTargetsLimitEnemyAttackToLargestForcePossiblyNeeded.txt")
 }
 
 func test(t *testing.T, filename string) {

@@ -338,6 +338,13 @@ func main() {
                         if armies_to_attack_with < 2 {
                             armies_to_attack_with = 2
                         }
+                    } else {
+                        max_enemy_placement := int64(5) // incorrect!
+                        armies_to_needed := ((attack_to.armies + max_enemy_placement) * 2) - 1 + 2
+                        if armies_to_needed + 3 < armies_to_attack_with {
+                            // if we would end up with enough armies to attack a neutral with
+                            armies_to_attack_with = armies_to_needed
+                        }
                     }
 
                     attacks = append(attacks, Attack{
@@ -345,7 +352,7 @@ func main() {
                         region_to: attack_to,
                         armies: armies_to_attack_with})
                     attack_from.armies -= armies_to_attack_with
-                    // used[attack_from.id] = true
+                    attack_to.owner = "us" // let's assume
                     used[attack_to.id] = true
                 }
             }
