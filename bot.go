@@ -331,10 +331,19 @@ func main() {
                 if attack_from == nil {
                     break
                 } else {
+                    armies_to_attack_with := attack_from.armies-1
+
+                    if attack_to.owner == "neutral" {
+                        armies_to_attack_with = (attack_to.armies * 2) - 1
+                        if armies_to_attack_with < 2 {
+                            armies_to_attack_with = 2
+                        }
+                    }
+
                     attacks = append(attacks, Attack{
                         region_from: attack_from,
                         region_to: attack_to,
-                        armies: attack_from.armies-1})
+                        armies: armies_to_attack_with})
                     used[attack_from.id] = true
                     used[attack_to.id] = true
                 }
