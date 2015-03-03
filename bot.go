@@ -262,10 +262,13 @@ func main() {
                         continue;
                     }
                     bordering_enemy := false
+                    largest_enemy := int64(0)
                     for _, neighbour := range region.neighbours {
                         if neighbour.owner == "them" {
                             bordering_enemy = true
-                            break
+                            if neighbour.armies > largest_enemy {
+                                largest_enemy = neighbour.armies
+                            }
                         }
                     }
 
@@ -302,7 +305,12 @@ func main() {
                                 if bordering_enemy {
                                     attackable = false // never attack neutral when enemy is present
                                 }
+                            } else if neighbour.owner == "them" {
+                                if neighbour.armies < largest_enemy {
+                                    attackable = false // only attack the largest neighbouring army group
+                                }
                             }
+
                             // fmt.Fprintf(os.Stderr, "%d (%d - %s) -> %d (%d - %s) attackable %t value %d best_value %d\n",
                             //     region.id, region.armies, region.owner,
                             //     neighbour.id, neighbour.armies, neighbour.owner,
