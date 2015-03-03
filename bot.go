@@ -190,6 +190,8 @@ func main() {
             // fmt.Fprintf(os.Stderr, "Attacks:\n")
             attacks := []Attack{}
 
+            // --------- reinforcements
+
             move_to := ourBorderRegions(state)
             considered := make(map[int64]bool)
             for _, region := range move_to {
@@ -225,14 +227,15 @@ func main() {
                 }
             }
 
+            // --------- attacks
+
             used := make(map[int64]bool)
             for {
                 var attack_from *Region
                 var attack_to *Region
-                var value int64
                 attack_from = nil
                 attack_to = nil
-                value = 0
+                value := float64(0)
                 for _, region := range ourRegions(state) {
                     if used[region.id] {
                         continue;
@@ -250,10 +253,27 @@ func main() {
                             continue;
                         }
                         if neighbour.owner != "us" {
-                            candidate_value := neighbour.armies
+                            candidate_value := float64(neighbour.armies)
                             if neighbour.owner == "neutral" {
-                                candidate_value = 0 // prefer attacking the enemy
+                                enemy_armies_in_super_region := int64(0)
+                                neutral_armies_in_super_region := int64(0)
+
+                                for _, subregion := range neighbour.super_region.regions {
+                                    if subregion.owner == "them" {
+                                        enemy_armies_in_super_region += subregion.armies
+                                    } else if subregion.owner == "neutral" {
+                                        neutral_armies_in_super_region += subregion.armies
+                                    }
+                                }
+
+                                candidate_value = float64(neighbour.super_region.reward)
+
+                                cost := float64(neutral_armies_in_super_region + 3*enemy_armies_in_super_region)
+                                if cost != 0 { // can cost ever really by zero !?
+                                    candidate_value = candidate_value / cost
+                                }
                             }
+
                             attackable := region.armies >= 5 + neighbour.armies
                             if neighbour.owner == "neutral" {
                                 attackable = (region.armies >= 3 && neighbour.armies == 1) ||
