@@ -300,7 +300,7 @@ func main() {
 
                             attackable := region.armies >= 5 + neighbour.armies
                             if neighbour.owner == "neutral" {
-                                attackable = (region.armies >= 3 && neighbour.armies <= 2) ||
+                                attackable = (region.armies >= 3 && neighbour.armies == 1) ||
                                     (region.armies > 3 && region.armies >= 2*neighbour.armies)
                                 if bordering_enemy {
                                     attackable = false // never attack neutral when enemy is present
