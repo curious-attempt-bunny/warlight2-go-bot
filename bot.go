@@ -251,6 +251,7 @@ func main() {
             // --------- attacks
 
             used := make(map[int64]bool)
+            newly_captured := make(map[int64]bool)
             for {
                 var attack_from *Region
                 var attack_to *Region
@@ -338,6 +339,13 @@ func main() {
                         if armies_to_attack_with < 2 {
                             armies_to_attack_with = 2
                         }
+                    } else {
+                        max_enemy_placement := int64(5) // incorrect!
+                        armies_to_needed := ((attack_to.armies + max_enemy_placement) * 2) - 1 + 2
+                        if armies_to_needed + 3 < armies_to_attack_with {
+                            // if we would end up with enough armies to attack a neutral with
+                            armies_to_attack_with = armies_to_needed
+                        }
                     }
 
                     attacks = append(attacks, Attack{
@@ -345,7 +353,8 @@ func main() {
                         region_to: attack_to,
                         armies: armies_to_attack_with})
                     attack_from.armies -= armies_to_attack_with
-                    // used[attack_from.id] = true
+                    attack_to.owner = "us" // let's assume
+                    newly_captured[attack_to.id] = true
                     used[attack_to.id] = true
                 }
             }
@@ -392,14 +401,20 @@ func main() {
 
                 if best_destination != nil {
                     armies_to_move := region.armies - 1
+                    safe_to_prepend := (newly_captured[best_destination.id] != true)
 
-                    new_attacks := make([]Attack, len(attacks)+1)
-                    copy(new_attacks[1:], attacks[:])
-                    new_attacks[0] = Attack{
-                        region_from: region,
-                        region_to: best_destination,
-                        armies: armies_to_move}
-                    attacks = new_attacks
+                    attack := Attack{
+                                region_from: region,
+                                region_to: best_destination,
+                                armies: armies_to_move }
+                    if safe_to_prepend {
+                        new_attacks := make([]Attack, len(attacks)+1)
+                        copy(new_attacks[1:], attacks[:])
+                        new_attacks[0] = attack
+                        attacks = new_attacks
+                    } else {
+                        attacks = append(attacks, attack)
+                    }
 
                     region.armies -= armies_to_move
                     armiesPlaced[best_destination.id] += armies_to_move
