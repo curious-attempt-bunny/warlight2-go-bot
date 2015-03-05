@@ -22,6 +22,7 @@ func TestBot(t *testing.T) {
   test(t, "tests/AvoidContactWithTheEnemyWhenClaimingARegion.txt")
   test(t, "tests/PlaceArmiesForMaximumIncome.txt")
   test(t, "tests/AttackWithAllArmiesWhenItsTheLastTarget2.txt")
+  test(t, "tests/PickSuperRegionsBasedOnShapeAlso.txt")
 }
 
 func test(t *testing.T, filename string) {

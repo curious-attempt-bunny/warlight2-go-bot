@@ -117,10 +117,22 @@ func main() {
                 if armies >= 6 {
                     weighting += 1
                 }
-                value := float64(region.super_region.reward) / weighting
 
-                // fmt.Fprintf(os.Stderr, "Starting region %d because score %g (reward %d armies %d weighting %d score %d / %d)\n",
-                //     region.id, value, region.super_region.reward, armies, weighting, region.super_region.reward, weighting)
+                neighbours_in_super_region := 0
+                for _, neighbour := range region.neighbours {
+                    if neighbour.super_region.id == region.super_region.id {
+                        neighbours_in_super_region += 1
+                    }
+                }
+
+                super_region_neighbour_ratio := float64(1+neighbours_in_super_region) / float64(len(region.super_region.regions))
+
+                value := super_region_neighbour_ratio*float64(region.super_region.reward) / weighting
+
+                // fmt.Fprintf(os.Stderr, "Starting region %d because score %g (reward %d armies %d weighting %g ratio %g score %d / %g)\n",
+                //     region.id, value,
+                //     region.super_region.reward, armies, weighting, super_region_neighbour_ratio,
+                //     region.super_region.reward, weighting)
                 if selected == nil || value > selected_value {
                     selected = region
                     selected_value = value
