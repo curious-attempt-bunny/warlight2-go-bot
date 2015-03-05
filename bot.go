@@ -416,6 +416,8 @@ func main() {
                         }
                     }
 
+                    // fmt.Fprintf(os.Stderr, "Attacking %d from %d (has %d armies) we have %d non-us neighbours.\n",
+                    //     attack_to.id, attack_from.id, attack_from.armies, neighbours_not_us)
                     if neighbours_not_us == 1 {
                         armies_to_attack_with = attack_from.armies - 1
                     }
