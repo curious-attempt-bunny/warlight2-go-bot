@@ -176,10 +176,6 @@ func main() {
             // fmt.Println("No moves")
             border_owner := "them"
             our_regions := ourBorderRegionsWithTheEnemy(state)
-            if len(our_regions) == 0 {
-                our_regions = ourBorderRegions(state)
-                border_owner = "neutral"
-            }
 
             var region *Region
             region = nil
@@ -197,7 +193,44 @@ func main() {
                     (bordered == bordered_enemies && border_region.id > region.id) { // repeatability
                     region = border_region
                     bordered_enemies = bordered
+
+                    // fmt.Fprintf(os.Stderr, "Like border region %d (bordered_enemies %d)\n", region.id, bordered_enemies)
                 }
+            }
+
+            if region == nil {
+                best_score := float64(0)
+                for _, border_region := range ourBorderRegionsWithNeutralOnly(state) {
+                    // TODO - not DRY
+                    enemy_armies_in_super_region := int64(0)
+                    neutral_armies_in_super_region := int64(0)
+
+                    for _, subregion := range border_region.super_region.regions {
+                        if subregion.owner == "them" {
+                            enemy_armies_in_super_region += subregion.armies
+                        } else if subregion.owner == "neutral" {
+                            neutral_armies_in_super_region += subregion.armies
+                        }
+                    }
+
+                    if neutral_armies_in_super_region == 0 && enemy_armies_in_super_region == 0 {
+                        continue
+                    }
+
+                    score := float64(border_region.super_region.reward)
+
+                    cost := float64(neutral_armies_in_super_region + 3*enemy_armies_in_super_region)
+                    score = score / cost
+
+                    if region == nil || score > best_score {
+                        region = border_region
+                        best_score = score
+                    }
+                }
+            }
+
+            if region == nil {
+                region = ourBorderRegions(state)[0]
             }
 
             fmt.Printf("%s place_armies %d %d,\n", our_name, region.id, state.starting_armies)
