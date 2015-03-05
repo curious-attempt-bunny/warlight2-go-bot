@@ -408,6 +408,18 @@ func main() {
                         }
                     }
 
+                    neighbours_not_us := 0
+
+                    for _, neighbour := range attack_from.neighbours {
+                        if neighbour.owner != "us" {
+                            neighbours_not_us += 1
+                        }
+                    }
+
+                    if neighbours_not_us == 1 {
+                        armies_to_attack_with = attack_from.armies - 1
+                    }
+
                     attacks = append(attacks, Attack{
                         region_from: attack_from,
                         region_to: attack_to,
