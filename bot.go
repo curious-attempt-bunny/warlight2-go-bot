@@ -194,7 +194,7 @@ func main() {
                 }
             }
         } else if strings.Index(line, "go place_armies") == 0 {
-            // fmt.Println("No moves")
+            // fmt.Fprintln(os.Stderr, "Place armies --")
             border_owner := "them"
             our_regions := ourBorderRegionsWithTheEnemy(state)
 
@@ -238,19 +238,34 @@ func main() {
                         continue
                     }
 
+                    enemy_neighbours_in_super_region := 0
+                    for _, neighbour := range border_region.neighbours {
+                        // fmt.Fprintf(os.Stderr, "  neighbour.super_region.id (%d) == border_region.super_region.id (%d) && neighbour.owner (%s) != \"us\"\n",
+                        //     neighbour.super_region.id, border_region.super_region.id,
+                        //     neighbour.owner)
+                        if neighbour.super_region.id == border_region.super_region.id &&
+                            neighbour.owner != "us" {
+                            enemy_neighbours_in_super_region = enemy_neighbours_in_super_region + 1
+                        }
+                    }
+
                     score := float64(border_region.super_region.reward)
 
                     cost := float64(neutral_armies_in_super_region + 3*enemy_armies_in_super_region)
                     cost = math.Pow(cost, 1.01) // inflate larger costs
                     score = score / cost
 
+                    score += float64(enemy_neighbours_in_super_region)*0.001 // prefer neighbouring more to attack
+
+                    // fmt.Fprintf(os.Stderr, "Place armies at %d has score %g (%d / %d+3*%d) - super region %d (enemy neighbours in super region %d)\n",
+                    //     border_region.id, score,
+                    //     border_region.super_region.reward,
+                    //     neutral_armies_in_super_region, enemy_armies_in_super_region,
+                    //     border_region.super_region.id,
+                    //     enemy_neighbours_in_super_region)
                     if region == nil || score > best_score {
                         region = border_region
                         best_score = score
-                        // fmt.Fprintf(os.Stderr, "Place armies at %d has score %g (%d / %d+3*%d)\n",
-                        //     border_region.id, score,
-                        //     border_region.super_region.reward,
-                        //     neutral_armies_in_super_region, enemy_armies_in_super_region)
                     }
                 }
             }
