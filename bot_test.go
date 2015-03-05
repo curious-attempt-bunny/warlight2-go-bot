@@ -19,6 +19,7 @@ func TestBot(t *testing.T) {
   test(t, "tests/MoveUnitsAroundOnTheNeutralBorder.txt")
   test(t, "tests/WithMultipleTargetsLimitEnemyAttackToLargestForcePossiblyNeeded.txt")
   test(t, "tests/ReinforceInCorrectOrderForSafely.txt")
+  test(t, "tests/AvoidContactWithTheEnemyWhenClaimingARegion.txt")
   test(t, "tests/PlaceArmiesForMaximumIncome.txt")
 }
 

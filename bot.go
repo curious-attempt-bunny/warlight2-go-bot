@@ -87,6 +87,13 @@ func main() {
                     region := state.regions[region_id]
                     region.armies = 6
                 }
+            } else if parts[1] == "opponent_starting_regions" {
+                for i := 2; i < len(parts); i++ {
+                    region_id, _ := strconv.ParseInt(parts[i], 10, 0)
+
+                    region := state.regions[region_id]
+                    region.owner = "them"
+                }
             }
         } else if parts[0] == "pick_starting_region" {
             var selected *Region
@@ -112,6 +119,8 @@ func main() {
                 }
                 value := float64(region.super_region.reward) / weighting
 
+                // fmt.Fprintf(os.Stderr, "Starting region %d because score %g (reward %d armies %d weighting %d score %d / %d)\n",
+                //     region.id, value, region.super_region.reward, armies, weighting, region.super_region.reward, weighting)
                 if selected == nil || value > selected_value {
                     selected = region
                     selected_value = value
@@ -220,11 +229,16 @@ func main() {
                     score := float64(border_region.super_region.reward)
 
                     cost := float64(neutral_armies_in_super_region + 3*enemy_armies_in_super_region)
+                    cost = math.Pow(cost, 1.01) // inflate larger costs
                     score = score / cost
 
                     if region == nil || score > best_score {
                         region = border_region
                         best_score = score
+                        // fmt.Fprintf(os.Stderr, "Place armies at %d has score %g (%d / %d+3*%d)\n",
+                        //     border_region.id, score,
+                        //     border_region.super_region.reward,
+                        //     neutral_armies_in_super_region, enemy_armies_in_super_region)
                     }
                 }
             }
@@ -241,7 +255,6 @@ func main() {
             //     last_placements[0].region.id, last_placements[0].armies)
 
         } else if strings.Index(line, "go attack/transfer") == 0 {
-            // fmt.Fprintf(os.Stderr, "Attacks:\n")
             attacks := []Attack{}
 
             // --------- reinforcements
@@ -286,6 +299,8 @@ func main() {
             used := make(map[int64]bool)
             newly_captured := make(map[int64]bool)
             for {
+                // fmt.Fprintf(os.Stderr, "Attacks:\n")
+
                 var attack_from *Region
                 var attack_to *Region
                 attack_from = nil
@@ -343,6 +358,18 @@ func main() {
                                 if neighbour.armies < largest_enemy {
                                     attackable = false // only attack the largest neighbouring army group
                                 }
+                            }
+
+                            neighbour_bordering_enemy := false
+                            for _, n := range neighbour.neighbours {
+                                if n.owner == "them" {
+                                    neighbour_bordering_enemy = true
+                                    break
+                                }
+                            }
+
+                            if neighbour_bordering_enemy {
+                                candidate_value -= 0.001 // tie breaker
                             }
 
                             // fmt.Fprintf(os.Stderr, "%d (%d - %s) -> %d (%d - %s) attackable %t value %d best_value %d\n",
