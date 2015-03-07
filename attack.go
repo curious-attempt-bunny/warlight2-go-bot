@@ -13,7 +13,6 @@ func placements(state *State) []Placement {
 
     armies_remaining := state.starting_armies
 
-    border_owner := "them"
     our_regions := ourBorderRegionsWithTheEnemy(state)
 
     var region *Region
@@ -22,16 +21,24 @@ func placements(state *State) []Placement {
 
     for _, border_region := range our_regions {
         bordered := 0
+        max_enemy_armies := int64(0)
         for _, neighbour := range border_region.neighbours {
-            if neighbour.owner == border_owner {
+            if neighbour.owner == "them" {
                 bordered += 1
+                if neighbour.armies > max_enemy_armies {
+                    max_enemy_armies = neighbour.armies
+                }
             }
         }
 
         if region == nil || bordered > bordered_enemies ||
             (bordered == bordered_enemies && border_region.id > region.id) { // repeatability
-            region = border_region
-            bordered_enemies = bordered
+            // we don't have to build up crazy army sizes:
+            // e.g. http://theaigames.com/competitions/warlight-ai-challenge-2/games/54fb795b4b5ab25e309e1fda
+            if !(border_region.armies > 20 && float64(border_region.armies) > 0.75*float64(max_enemy_armies+5)) {
+                region = border_region
+                bordered_enemies = bordered
+            }
 
             // fmt.Fprintf(os.Stderr, "Like border region %d (bordered_enemies %d)\n", region.id, bordered_enemies)
         }
