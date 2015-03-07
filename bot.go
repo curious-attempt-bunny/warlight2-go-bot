@@ -145,6 +145,7 @@ func main() {
                 if region.owner == "us" {
                     region.owner = "them"
                 }
+                region.visible = false
             }
 
             for i := 1; i < len(parts); i += 3 {
@@ -164,6 +165,7 @@ func main() {
                 region.owner = who
                 // fmt.Fprintf(os.Stderr, "%d %s vs %s\n", region_id, state.regions[region_id].owner, who)
                 region.armies = armies
+                region.visible = true
             }
         } else if parts[0] == "opponent_moves" {
             // TODO
@@ -323,6 +325,13 @@ func main() {
 
             // --------- attacks
 
+            superRegionOwnedByEnemy := make(map[int64]bool)
+            for _, super_region := range state.super_regions {
+                superRegionOwnedByEnemy[super_region.id] = isSuperRegionPossiblyOwnedByTheEnemy(super_region)
+                // fmt.Fprintf(os.Stderr, "Super region %d possibly owned by the enemy? %t\n",
+                //     super_region.id, superRegionOwnedByEnemy[super_region.id])
+            }
+
             used := make(map[int64]bool)
             newly_captured := make(map[int64]bool)
             for {
@@ -407,9 +416,15 @@ func main() {
                                 if attack_to == nil ||
                                     (candidate_value >= value) ||
                                     (neighbour.armies == attack_to.armies && region.armies > attack_from.armies) {
-                                    attack_to = neighbour
-                                    attack_from = region
-                                    value = candidate_value
+                                    if attack_to == nil ||
+                                            (superRegionOwnedByEnemy[attack_to.super_region.id] == superRegionOwnedByEnemy[region.super_region.id] &&
+                                                !superRegionOwnedByEnemy[attack_to.super_region.id] ||
+                                                attack_to.super_region.reward <= region.super_region.reward) ||
+                                            superRegionOwnedByEnemy[region.super_region.id] {
+                                        attack_to = neighbour
+                                        attack_from = region
+                                        value = candidate_value
+                                    }
                                 }
                             }
                         }
@@ -685,12 +700,29 @@ type Region struct {
     neighbours []*Region
     owner string
     armies int64
+    visible bool
 }
 
 type SuperRegion struct {
     id int64
     regions []*Region
     reward int64
+}
+
+func isSuperRegionPossiblyOwnedByTheEnemy(super_region *SuperRegion) bool {
+    possibly_owned_by_the_enemy := true
+
+    for _, region := range super_region.regions {
+        if !region.visible {
+            continue
+        }
+        if region.owner != "them" {
+            possibly_owned_by_the_enemy = false
+            break
+        }
+    }
+
+    return possibly_owned_by_the_enemy
 }
 
 type Placement struct {
