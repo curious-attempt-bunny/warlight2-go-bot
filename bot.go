@@ -198,98 +198,12 @@ func main() {
         } else if strings.Index(line, "go place_armies") == 0 {
             // fmt.Fprintln(os.Stderr, "Place armies --")
 
-            last_placements = []Placement{}
-
-            border_owner := "them"
-            our_regions := ourBorderRegionsWithTheEnemy(state)
-
-            var region *Region
-            region = nil
-            bordered_enemies := 0
-
-            for _, border_region := range our_regions {
-                bordered := 0
-                for _, neighbour := range border_region.neighbours {
-                    if neighbour.owner == border_owner {
-                        bordered += 1
-                    }
-                }
-
-                if region == nil || bordered > bordered_enemies ||
-                    (bordered == bordered_enemies && border_region.id > region.id) { // repeatability
-                    region = border_region
-                    bordered_enemies = bordered
-
-                    // fmt.Fprintf(os.Stderr, "Like border region %d (bordered_enemies %d)\n", region.id, bordered_enemies)
-                }
-            }
-
-            if region == nil {
-                best_score := float64(0)
-                for _, border_region := range ourBorderRegionsWithNeutralOnly(state) {
-                    // TODO - not DRY
-                    enemy_armies_in_super_region := int64(0)
-                    neutral_armies_in_super_region := int64(0)
-
-                    for _, subregion := range border_region.super_region.regions {
-                        if subregion.owner == "them" {
-                            enemy_armies_in_super_region += subregion.armies
-                        } else if subregion.owner == "neutral" {
-                            neutral_armies_in_super_region += subregion.armies
-                        }
-                    }
-
-                    if neutral_armies_in_super_region == 0 && enemy_armies_in_super_region == 0 {
-                        continue
-                    }
-
-                    enemy_neighbours_in_super_region := 0
-                    for _, neighbour := range border_region.neighbours {
-                        // fmt.Fprintf(os.Stderr, "  neighbour.super_region.id (%d) == border_region.super_region.id (%d) && neighbour.owner (%s) != \"us\"\n",
-                        //     neighbour.super_region.id, border_region.super_region.id,
-                        //     neighbour.owner)
-                        if neighbour.super_region.id == border_region.super_region.id &&
-                            neighbour.owner != "us" {
-                            enemy_neighbours_in_super_region = enemy_neighbours_in_super_region + 1
-                        }
-                    }
-
-                    score := float64(border_region.super_region.reward)
-
-                    cost := float64(neutral_armies_in_super_region + 3*enemy_armies_in_super_region)
-                    cost = math.Pow(cost, 1.01) // inflate larger costs
-                    score = score / cost
-
-                    score += float64(enemy_neighbours_in_super_region)*0.001 // prefer neighbouring more to attack
-
-                    // fmt.Fprintf(os.Stderr, "Place armies at %d has score %g (%d / %d+3*%d) - super region %d (enemy neighbours in super region %d)\n",
-                    //     border_region.id, score,
-                    //     border_region.super_region.reward,
-                    //     neutral_armies_in_super_region, enemy_armies_in_super_region,
-                    //     border_region.super_region.id,
-                    //     enemy_neighbours_in_super_region)
-                    if region == nil || score > best_score {
-                        region = border_region
-                        best_score = score
-                    }
-                }
-            }
-
-            if region == nil {
-                region = ourBorderRegions(state)[0]
-            }
-
-            region.armies += state.starting_armies
-            placement := Placement{region: region, armies: state.starting_armies}
-            last_placements = append(last_placements, placement)
+            last_placements = placements(state)
 
             for _, placement := range last_placements {
                 fmt.Printf("%s place_armies %d %d,", our_name, placement.region.id, placement.armies)
             }
             fmt.Println()
-            // fmt.Fprintf(os.Stderr, "Adding calculated placement at %d of %d armies\n",
-            //     last_placements[0].region.id, last_placements[0].armies)
-
         } else if strings.Index(line, "go attack/transfer") == 0 {
             attacks := calculateAttacks(state)
 
