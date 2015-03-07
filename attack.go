@@ -34,42 +34,39 @@ func placements(state *State) []Placement {
     if region == nil {
         armies_needed := state.starting_armies
         for {
-            best_score := float64(0)
-            for _, border_region := range ourBorderRegionsWithNeutralOnly(state) {
-                // TODO - not DRY
+            superRegionScore := make(map[int64]float64)
+            for _, super_region := range state.super_regions {
                 enemy_armies_in_super_region := int64(0)
                 neutral_armies_in_super_region := int64(0)
+                enemy_neighbours_in_super_region := int64(0)
 
-                for _, subregion := range border_region.super_region.regions {
+                for _, subregion := range super_region.regions {
                     if subregion.owner == "them" {
                         enemy_armies_in_super_region += subregion.armies
+                        enemy_neighbours_in_super_region++
                     } else if subregion.owner == "neutral" {
                         neutral_armies_in_super_region += subregion.armies
                     }
                 }
 
-                if neutral_armies_in_super_region == 0 && enemy_armies_in_super_region == 0 {
-                    continue
+                score := float64(0)
+
+                if !(neutral_armies_in_super_region == 0 && enemy_armies_in_super_region == 0) {
+                    score := float64(super_region.reward)
+
+                    cost := float64(neutral_armies_in_super_region + 3*enemy_armies_in_super_region)
+                    cost = math.Pow(cost, 1.01) // inflate larger costs
+                    score = score / cost
+
+                    score += float64(enemy_neighbours_in_super_region)*0.001 // prefer neighbouring more to attack
                 }
 
-                enemy_neighbours_in_super_region := 0
-                for _, neighbour := range border_region.neighbours {
-                    // fmt.Fprintf(os.Stderr, "  neighbour.super_region.id (%d) == border_region.super_region.id (%d) && neighbour.owner (%s) != \"us\"\n",
-                    //     neighbour.super_region.id, border_region.super_region.id,
-                    //     neighbour.owner)
-                    if neighbour.super_region.id == border_region.super_region.id &&
-                        neighbour.owner != "us" {
-                        enemy_neighbours_in_super_region = enemy_neighbours_in_super_region + 1
-                    }
-                }
+                superRegionScore[super_region.id] = score
+            }
 
-                score := float64(border_region.super_region.reward)
-
-                cost := float64(neutral_armies_in_super_region + 3*enemy_armies_in_super_region)
-                cost = math.Pow(cost, 1.01) // inflate larger costs
-                score = score / cost
-
-                score += float64(enemy_neighbours_in_super_region)*0.001 // prefer neighbouring more to attack
+            best_score := float64(0)
+            for _, border_region := range ourBorderRegionsWithNeutralOnly(state) {
+                score := superRegionScore[border_region.super_region.id]
 
                 // fmt.Fprintf(os.Stderr, "Place armies at %d has score %g (%d / %d+3*%d) - super region %d (enemy neighbours in super region %d)\n",
                 //     border_region.id, score,
