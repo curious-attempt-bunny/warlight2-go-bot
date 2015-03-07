@@ -6,6 +6,9 @@ import "os"
 
 func placements(state *State) []Placement {
     fmt.Fprintln(os.Stderr, "Placements:")
+
+    preserved_state := preserve_state(state)
+
     last_placements := []Placement{}
 
     armies_remaining := state.starting_armies
@@ -74,7 +77,7 @@ func placements(state *State) []Placement {
 
                 superRegionScore[super_region.id] = score
 
-                fmt.Fprintf(os.Stderr, "Super region %d scores %g\n", super_region.id, score)
+                // fmt.Fprintf(os.Stderr, "Super region %d scores %g\n", super_region.id, score)
             }
 
             armies_to_place := int64(0)
@@ -98,8 +101,8 @@ func placements(state *State) []Placement {
                             score := superRegionScore[neighbour.super_region.id]
                             score = score*score / float64(1+armies_needed)
 
-                            fmt.Fprintf(os.Stderr, "Considering %d to %d need %d armies and have %d remaining (score %g).\n",
-                                border_region.id, neighbour.id, armies_needed, armies_remaining, score)
+                            // fmt.Fprintf(os.Stderr, "Considering %d to %d need %d armies and have %d remaining (score %g).\n",
+                            //     border_region.id, neighbour.id, armies_needed, armies_remaining, score)
 
                             if region == nil || score > best_score {
                                 best_score = score
@@ -120,8 +123,8 @@ func placements(state *State) []Placement {
                 break
             }
 
-            fmt.Fprintf(os.Stderr, "Placing %d armies at %d so that we can attack %d (SR %d) with %d armies.\n",
-                armies_to_place, region.id, attack_to.id, attack_to.super_region.id, armies_to_attack_with)
+            // fmt.Fprintf(os.Stderr, "Placing %d armies at %d so that we can attack %d (SR %d) with %d armies.\n",
+            //     armies_to_place, region.id, attack_to.id, attack_to.super_region.id, armies_to_attack_with)
             region.armies -= armies_to_attack_with
             attack_to.owner = "us"
 
@@ -147,6 +150,8 @@ func placements(state *State) []Placement {
         placement := Placement{region: region, armies: armies_remaining}
         last_placements = append(last_placements, placement)
     }
+
+    restore_state(state, preserved_state)
 
     return last_placements
 }

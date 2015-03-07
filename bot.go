@@ -202,6 +202,7 @@ func main() {
 
             for _, placement := range last_placements {
                 fmt.Printf("%s place_armies %d %d,", our_name, placement.region.id, placement.armies)
+                placement.region.armies += placement.armies
             }
             fmt.Println()
         } else if strings.Index(line, "go attack/transfer") == 0 {
@@ -402,4 +403,30 @@ func calculateAttacks(state *State) []Attack {
     attacks = border_reinforcement_moves(state, attacks, newly_captured)
 
     return attacks
+}
+
+func preserve_state(state *State) []*Region {
+    preserved := []*Region{}
+
+    for _, region := range state.regions {
+        preserved = append(preserved, &Region{
+            id: region.id,
+            owner: region.owner,
+            armies: region.armies})
+    }
+
+    return preserved
+}
+
+func restore_state(state *State, preserved []*Region) {
+    for _, region := range preserved {
+        if (state.regions[region.id].owner != region.owner ||
+            state.regions[region.id].armies != region.armies) {
+            // fmt.Fprintf(os.Stderr, "Restored region %d to owner %s (%s) and armies %d (%d)\n",
+            //     region.id, region.owner, state.regions[region.id].owner,
+            //     region.armies, state.regions[region.id].armies)
+        }
+        state.regions[region.id].owner = region.owner
+        state.regions[region.id].armies = region.armies
+    }
 }

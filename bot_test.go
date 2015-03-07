@@ -8,7 +8,7 @@ import "strings"
 import "io/ioutil"
 
 func TestBot(t *testing.T) {
-  // test(t, "tests/Attacks.txt")
+  test(t, "tests/Attacks.txt")
   // test(t, "tests/AttackNeutralWhenItWouldWin.txt")
   // test(t, "tests/PlaceNextToTheEnemyFirst.txt")
   // test(t, "tests/DontCrashPickingStartingRegions.txt")
@@ -20,11 +20,12 @@ func TestBot(t *testing.T) {
   // test(t, "tests/WithMultipleTargetsLimitEnemyAttackToLargestForcePossiblyNeeded.txt")
   // test(t, "tests/ReinforceInCorrectOrderForSafely.txt")
   // test(t, "tests/AvoidContactWithTheEnemyWhenClaimingARegion.txt")
-  test(t, "tests/PlaceArmiesForMaximumIncome.txt")
+  // test(t, "tests/PlaceArmiesForMaximumIncome.txt")
   // test(t, "tests/AttackWithAllArmiesWhenItsTheLastTarget2.txt")
   // test(t, "tests/PickSuperRegionsBasedOnShapeAlso.txt")
-  // test(t, "tests/ReinforceArmiesToEnemyBorders.txt")
   // test(t, "tests/ConsolidateAttackAndTransfers.txt")
+  // test(t, "tests/ReinforceArmiesToEnemyBorders.txt")
+
   // test(t, "tests/CannotMoveWithArmiesThatAttacked.txt")
   // test(t, "tests/AttackRegionsInPossiblyCompleteSuperRegionsFirst.txt")
   // test(t, "tests/PlaceOnlyTheArmiesNeededToCaptureNeutral.txt")
