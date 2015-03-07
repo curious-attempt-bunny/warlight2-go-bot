@@ -197,6 +197,9 @@ func main() {
             }
         } else if strings.Index(line, "go place_armies") == 0 {
             // fmt.Fprintln(os.Stderr, "Place armies --")
+
+            last_placements = []Placement{}
+
             border_owner := "them"
             our_regions := ourBorderRegionsWithTheEnemy(state)
 
@@ -276,10 +279,14 @@ func main() {
                 region = ourBorderRegions(state)[0]
             }
 
-            fmt.Printf("%s place_armies %d %d,\n", our_name, region.id, state.starting_armies)
             region.armies += state.starting_armies
-            last_placements = []Placement{}
-            last_placements = append(last_placements, Placement{region: region, armies: state.starting_armies})
+            placement := Placement{region: region, armies: state.starting_armies}
+            last_placements = append(last_placements, placement)
+
+            for _, placement := range last_placements {
+                fmt.Printf("%s place_armies %d %d,", our_name, placement.region.id, placement.armies)
+            }
+            fmt.Println()
             // fmt.Fprintf(os.Stderr, "Adding calculated placement at %d of %d armies\n",
             //     last_placements[0].region.id, last_placements[0].armies)
 
