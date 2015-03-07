@@ -454,6 +454,7 @@ func main() {
                         region_to: attack_to,
                         armies: armies_to_attack_with})
                     attack_from.armies -= armies_to_attack_with
+                    // fmt.Fprintf(os.Stderr, "Region %d now has %d armies\n", attack_from.id, attack_from.armies)
                     attack_to.owner = "us" // let's assume
                     newly_captured[attack_to.id] = true
                     used[attack_to.id] = true
@@ -461,6 +462,12 @@ func main() {
             }
 
             // --------- reinforcements along the neutral border
+
+            ideal_destinations := ourBorderRegionsWithTheEnemy(state)
+            regionToIdeal := make(map[int64]bool)
+            for _, region := range ideal_destinations {
+                regionToIdeal[region.id] = true
+            }
 
             move_from := ourBorderRegionsWithNeutralOnly(state)
             armiesPlaced := make(map[int64]int64)
@@ -470,6 +477,10 @@ func main() {
 
             for _, region := range move_from {
                 if region.armies == 1 {
+                    continue
+                }
+
+                if newly_captured[region.id] {
                     continue
                 }
 
@@ -485,7 +496,10 @@ func main() {
                         continue
                     }
 
-                    if best_destination == nil || armiesPlaced[neighbour.id] >= region.armies {
+                    if best_destination == nil ||
+                        (armiesPlaced[neighbour.id] >= region.armies &&
+                            regionToIdeal[neighbour.id] == regionToIdeal[region.id]) ||
+                        (regionToIdeal[neighbour.id] && !regionToIdeal[region.id]) {
                         borders_something := false
                         for _, n := range neighbour.neighbours {
                             if n.owner != "us" {
