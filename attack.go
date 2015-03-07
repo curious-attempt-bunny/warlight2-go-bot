@@ -35,6 +35,11 @@ func placements(state *State) []Placement {
     }
 
     if region == nil {
+        regionWeStartedWith := make(map[int64]bool)
+        for _, r := range ourRegions(state) {
+            regionWeStartedWith[r.id] = true
+        }
+
         for {
             superRegionScore := make(map[int64]float64)
             for _, super_region := range state.super_regions {
@@ -61,7 +66,7 @@ func placements(state *State) []Placement {
                     score = float64(super_region.reward)
 
                     cost := float64(neutral_armies_in_super_region + 3*enemy_armies_in_super_region)
-                    cost = math.Pow(cost, 1.01) // inflate larger costs
+                    cost = math.Pow(cost, 1.05) // inflate larger costs
                     score = 10*score / cost
 
                     score += float64(enemy_neighbours_in_super_region)*0.001 // prefer neighbouring more to attack
@@ -78,6 +83,9 @@ func placements(state *State) []Placement {
             region = nil
             var attack_to *Region = nil
             for _, border_region := range ourBorderRegionsWithNeutralOnly(state) {
+                if !regionWeStartedWith[border_region.id] {
+                    continue
+                }
 
                 for _, neighbour := range border_region.neighbours {
                     if neighbour.owner == "neutral" {
