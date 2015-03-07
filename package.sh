@@ -1,3 +1,4 @@
 #!/bin/sh
 
-zip bot.zip bot.go brain.go
+zip bot.zip *.go
+zip -d bot.zip bot_test.go
