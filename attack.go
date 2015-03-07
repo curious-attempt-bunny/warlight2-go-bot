@@ -35,7 +35,10 @@ func placements(state *State) []Placement {
             (bordered == bordered_enemies && border_region.id > region.id) { // repeatability
             // we don't have to build up crazy army sizes:
             // e.g. http://theaigames.com/competitions/warlight-ai-challenge-2/games/54fb795b4b5ab25e309e1fda
-            if !(border_region.armies > 20 && float64(border_region.armies) > 0.75*float64(max_enemy_armies+5)) {
+            if border_region.armies > 20 && float64(border_region.armies) > 0.75*float64(max_enemy_armies+5) {
+                region = nil
+                break // don't place at all on the border if there's an army buildup going on
+            } else {
                 region = border_region
                 bordered_enemies = bordered
             }

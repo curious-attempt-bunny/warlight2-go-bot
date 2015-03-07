@@ -27,6 +27,7 @@ func TestBot(t *testing.T) {
   test(t, "tests/ReinforceArmiesToEnemyBorders.txt")
   test(t, "tests/CannotMoveWithArmiesThatAttacked.txt")
   test(t, "tests/NoNeedToBuildUpPastACertainPoint.txt")
+  test(t, "tests/DontPlaceOnEnemyBorderWhenInBuildupGame.txt")
   // test(t, "tests/AttackRegionsInPossiblyCompleteSuperRegionsFirst.txt")
   // test(t, "tests/PlaceOnlyTheArmiesNeededToCaptureNeutral.txt")
   // test(t, "tests/PlaceArmiesForMaximumIncome2.txt")
