@@ -72,4 +72,4 @@ go attack/transfer 10000
 
 Output from your bot: "player1 attack/transfer 37 34 1,player1 attack/transfer 36 34 1,player1 attack/transfer 28 19 2,player1 attack/transfer 34 36 3,player1 attack/transfer 11 17 3,player1 attack/transfer 34 37 3,player1 attack/transfer 11 17 1,"
 
-# Valid: [player1 attack/transfer 11 17 4,]
+# Valid: ![player1 attack/transfer 11 17 1,]

@@ -523,6 +523,37 @@ func main() {
                 }
             }
 
+            // consolidate attacks & transfers
+
+            regionIdToIndex := make(map[int64]int64)
+            i := int64(0)
+            for {
+                if (int(i) >= len(attacks)) {
+                    break
+                }
+
+                key := attacks[i].region_from.id * 1000 + attacks[i].region_to.id
+                index, exists := regionIdToIndex[key]
+                if exists {
+                    attack := attacks[i]
+
+                    new_attacks := make([]Attack, len(attacks)-1)
+                    copy(new_attacks[:i], attacks[:])
+                    if len(attacks) > int(i+1) {
+                        copy(new_attacks[i:], attacks[i+1:])
+                    }
+                    attacks = new_attacks
+
+                    attacks[index] = Attack{
+                                region_from: attacks[index].region_from,
+                                region_to: attacks[index].region_to,
+                                armies: attacks[index].armies + attack.armies }
+                } else {
+                    regionIdToIndex[key] = i
+                    i++
+                }
+            }
+
             if len(attacks) == 0 {
                 fmt.Println("No moves")
             } else {

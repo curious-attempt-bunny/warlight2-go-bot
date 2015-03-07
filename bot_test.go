@@ -24,6 +24,13 @@ func TestBot(t *testing.T) {
   test(t, "tests/AttackWithAllArmiesWhenItsTheLastTarget2.txt")
   test(t, "tests/PickSuperRegionsBasedOnShapeAlso.txt")
   test(t, "tests/PlaceArmiesForMaximumIncome2.txt")
+  // test(t, "tests/PlaceArmiesOnMostImportantBorder.txt")
+  // test(t, "tests/ReinforceArmiesToEnemyBorders.txt")
+  // test(t, "tests/AttackRegionsInPossiblyCompleteSuperRegionsFirst.txt")
+  // test(t, "tests/PlaceOnlyTheArmiesNeededToCaptureNeutral.txt")
+  test(t, "tests/ConsolidateAttackAndTransfers.txt")
+  // test(t, "tests/CannotMoveWithArmiesThatAttacked.txt")
+  // test(t, "tests/TransferTroopsToWhereTheyAreMostNeeded.txt")
 }
 
 func test(t *testing.T, filename string) {
