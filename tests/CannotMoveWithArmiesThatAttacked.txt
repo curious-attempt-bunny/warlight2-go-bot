@@ -1,0 +1,75 @@
+# http://theaigames.com/competitions/warlight-ai-challenge-2/games/54f81eb64b5ab25e309def07
+
+settings timebank 10000
+
+settings time_per_move 500
+
+settings max_rounds 105
+
+settings your_bot player1
+
+settings opponent_bot player2
+
+setup_map super_regions 1 5 2 3 3 4 4 3 5 4 6 1 7 2 8 6 9 5
+
+setup_map regions 1 1 2 1 3 1 4 1 5 1 6 1 7 2 8 2 9 2 10 3 11 3 12 3 13 3 14 3 15 4 16 4 17 4 18 4 19 4 20 5 21 5 22 5 23 5 24 5 25 6 26 6 27 6 28 7 29 7 30 7 31 7 32 8 33 8 34 8 35 8 36 8 37 8 38 9 39 9 40 9 41 9 42 9
+
+setup_map neighbors 1 5,2 2 3,7,5 3 4,8,6,16,7 4 6 5 7,11,10 6 20,16 7 8,9,11,15,16 9 16,15 10 11,12,13,17,14 11 13,15,17 13 17 14 25,17 15 17,16,19,18 16 18,20 17 25,19 18 20,32,29,22,28,19 19 28,25 20 21,22 21 22 22 23,24,32 23 33,24 24 33,34,32 25 26,28,38,27,30 26 38 27 30,38 28 31,29,30 29 34,37,41,32,39,31,30 30 39,40,38 32 34 33 36,35,34 34 35,37,36,41 37 41 38 40 39 41,40 40 41,42 41 42
+
+setup_map wastelands 1 8 14 30
+
+settings starting_regions 5 7 11 19 20 26 28 34 39
+
+settings starting_pick_amount 4
+
+pick_starting_region 10000 5 7 11 19 20 26 28 34 39
+
+Output from your bot: "34"
+
+pick_starting_region 10000 5 7 11 19 26 28
+
+Output from your bot: "7"
+
+pick_starting_region 10000 5 11 19 26 28
+
+Output from your bot: "19"
+
+pick_starting_region 10000 5 28
+
+Output from your bot: "28"
+
+setup_map opponent_starting_regions 39 20 26 11
+
+settings starting_armies 5
+
+update_map 7 player1 2 19 player1 2 28 player1 2 34 player1 2 2 neutral 2 3 neutral 2 5 neutral 2 8 neutral 6 9 neutral 2 11 player2 2 15 neutral 2 16 neutral 2 17 neutral 2 18 neutral 2 25 neutral 2 31 neutral 2 29 neutral 2 30 neutral 6 32 neutral 2 24 neutral 2 33 neutral 2 35 neutral 2 37 neutral 2 36 neutral 2 41 neutral 2
+
+opponent_moves
+
+Round 1
+
+go place_armies 10000
+
+Output from your bot: "player1 place_armies 7 5,"
+
+go attack/transfer 10000
+
+Output from your bot: "player1 attack/transfer 19 28 1,player1 attack/transfer 11 7 1,player1 attack/transfer 7 11 6,"
+
+settings starting_armies 5
+
+update_map 7 player1 1 11 player1 5 19 player1 1 28 player1 3 34 player1 2 2 neutral 2 3 neutral 2 5 neutral 2 8 neutral 6 9 neutral 2 15 neutral 2 16 neutral 2 10 neutral 2 13 neutral 2 17 neutral 2 18 neutral 2 25 neutral 2 31 neutral 2 29 neutral 2 30 neutral 6 32 neutral 2 24 neutral 2 33 neutral 2 35 neutral 2 37 neutral 2 36 neutral 2 41 neutral 2
+
+opponent_moves
+
+Round 2
+
+go place_armies 10000
+
+Output from your bot: "player1 place_armies 34 5,"
+
+go attack/transfer 10000
+
+Output from your bot: "player1 attack/transfer 37 34 1,player1 attack/transfer 36 34 1,player1 attack/transfer 28 19 2,player1 attack/transfer 34 36 3,player1 attack/transfer 11 17 3,player1 attack/transfer 34 37 3,player1 attack/transfer 11 17 1,"
+
+# Valid: ![player1 attack/transfer 37 34 1,]
