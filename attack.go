@@ -5,6 +5,8 @@ import "math"
 func placements(state *State) []Placement {
     last_placements := []Placement{}
 
+    armies_remaining := state.starting_armies
+
     border_owner := "them"
     our_regions := ourBorderRegionsWithTheEnemy(state)
 
@@ -30,52 +32,68 @@ func placements(state *State) []Placement {
     }
 
     if region == nil {
-        best_score := float64(0)
-        for _, border_region := range ourBorderRegionsWithNeutralOnly(state) {
-            // TODO - not DRY
-            enemy_armies_in_super_region := int64(0)
-            neutral_armies_in_super_region := int64(0)
+        armies_needed := state.starting_armies
+        for {
+            best_score := float64(0)
+            for _, border_region := range ourBorderRegionsWithNeutralOnly(state) {
+                // TODO - not DRY
+                enemy_armies_in_super_region := int64(0)
+                neutral_armies_in_super_region := int64(0)
 
-            for _, subregion := range border_region.super_region.regions {
-                if subregion.owner == "them" {
-                    enemy_armies_in_super_region += subregion.armies
-                } else if subregion.owner == "neutral" {
-                    neutral_armies_in_super_region += subregion.armies
+                for _, subregion := range border_region.super_region.regions {
+                    if subregion.owner == "them" {
+                        enemy_armies_in_super_region += subregion.armies
+                    } else if subregion.owner == "neutral" {
+                        neutral_armies_in_super_region += subregion.armies
+                    }
+                }
+
+                if neutral_armies_in_super_region == 0 && enemy_armies_in_super_region == 0 {
+                    continue
+                }
+
+                enemy_neighbours_in_super_region := 0
+                for _, neighbour := range border_region.neighbours {
+                    // fmt.Fprintf(os.Stderr, "  neighbour.super_region.id (%d) == border_region.super_region.id (%d) && neighbour.owner (%s) != \"us\"\n",
+                    //     neighbour.super_region.id, border_region.super_region.id,
+                    //     neighbour.owner)
+                    if neighbour.super_region.id == border_region.super_region.id &&
+                        neighbour.owner != "us" {
+                        enemy_neighbours_in_super_region = enemy_neighbours_in_super_region + 1
+                    }
+                }
+
+                score := float64(border_region.super_region.reward)
+
+                cost := float64(neutral_armies_in_super_region + 3*enemy_armies_in_super_region)
+                cost = math.Pow(cost, 1.01) // inflate larger costs
+                score = score / cost
+
+                score += float64(enemy_neighbours_in_super_region)*0.001 // prefer neighbouring more to attack
+
+                // fmt.Fprintf(os.Stderr, "Place armies at %d has score %g (%d / %d+3*%d) - super region %d (enemy neighbours in super region %d)\n",
+                //     border_region.id, score,
+                //     border_region.super_region.reward,
+                //     neutral_armies_in_super_region, enemy_armies_in_super_region,
+                //     border_region.super_region.id,
+                //     enemy_neighbours_in_super_region)
+                if region == nil || score > best_score {
+                    region = border_region
+                    best_score = score
                 }
             }
 
-            if neutral_armies_in_super_region == 0 && enemy_armies_in_super_region == 0 {
-                continue
+            if region == nil {
+                break
+            } else {
+                region.armies += armies_needed
+                placement := Placement{region: region, armies: armies_needed}
+                last_placements = append(last_placements, placement)
+                armies_remaining -= armies_needed
             }
 
-            enemy_neighbours_in_super_region := 0
-            for _, neighbour := range border_region.neighbours {
-                // fmt.Fprintf(os.Stderr, "  neighbour.super_region.id (%d) == border_region.super_region.id (%d) && neighbour.owner (%s) != \"us\"\n",
-                //     neighbour.super_region.id, border_region.super_region.id,
-                //     neighbour.owner)
-                if neighbour.super_region.id == border_region.super_region.id &&
-                    neighbour.owner != "us" {
-                    enemy_neighbours_in_super_region = enemy_neighbours_in_super_region + 1
-                }
-            }
-
-            score := float64(border_region.super_region.reward)
-
-            cost := float64(neutral_armies_in_super_region + 3*enemy_armies_in_super_region)
-            cost = math.Pow(cost, 1.01) // inflate larger costs
-            score = score / cost
-
-            score += float64(enemy_neighbours_in_super_region)*0.001 // prefer neighbouring more to attack
-
-            // fmt.Fprintf(os.Stderr, "Place armies at %d has score %g (%d / %d+3*%d) - super region %d (enemy neighbours in super region %d)\n",
-            //     border_region.id, score,
-            //     border_region.super_region.reward,
-            //     neutral_armies_in_super_region, enemy_armies_in_super_region,
-            //     border_region.super_region.id,
-            //     enemy_neighbours_in_super_region)
-            if region == nil || score > best_score {
-                region = border_region
-                best_score = score
+            if armies_remaining == 0 {
+                break
             }
         }
     }
@@ -84,9 +102,11 @@ func placements(state *State) []Placement {
         region = ourBorderRegions(state)[0]
     }
 
-    region.armies += state.starting_armies
-    placement := Placement{region: region, armies: state.starting_armies}
-    last_placements = append(last_placements, placement)
+    if armies_remaining > 0 {
+        region.armies += armies_remaining
+        placement := Placement{region: region, armies: armies_remaining}
+        last_placements = append(last_placements, placement)
+    }
 
     return last_placements
 }
