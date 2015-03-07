@@ -3,13 +3,57 @@ package main
 func calculateAttacks(state *State) []Attack {
     attacks := []Attack{}
 
-    // --------- reinforcements
+    attacks = reinforcement_moves(state, attacks)
 
-    attacks = reinforcements(state, attacks)
+    var newly_captured map[int64]bool
+    attacks, newly_captured = attack_moves(state, attacks)
 
-    // --------- attacks
+    attacks = border_reinforcement_moves(state, attacks, newly_captured)
 
-    superRegionOwnedByEnemy := make(map[int64]bool)
+    return attacks
+}
+
+func reinforcement_moves(state *State, attacks []Attack) []Attack {
+    move_to := ourBorderRegions(state)
+    considered := make(map[int64]bool)
+    for _, region := range move_to {
+        considered[region.id] = true
+    }
+
+    for {
+        if len(move_to) == 0 {
+            break
+        }
+
+        region := move_to[0]
+        move_to = move_to[1:]
+
+        for _, neighbour := range region.neighbours {
+            if neighbour.owner != "us" {
+                continue
+            }
+
+            if considered[neighbour.id] {
+                continue
+            }
+
+            if neighbour.armies > 1 {
+                attacks = append(attacks, Attack{
+                    region_from: neighbour,
+                    region_to: region,
+                    armies: neighbour.armies - 1})
+            }
+
+            considered[neighbour.id] = true
+            move_to = append(move_to, neighbour)
+        }
+    }
+
+    return attacks
+}
+
+func attack_moves(state *State, attacks []Attack) ([]Attack, map[int64]bool) {
+      superRegionOwnedByEnemy := make(map[int64]bool)
     for _, super_region := range state.super_regions {
         superRegionOwnedByEnemy[super_region.id] = isSuperRegionPossiblyOwnedByTheEnemy(super_region)
         // fmt.Fprintf(os.Stderr, "Super region %d possibly owned by the enemy? %t\n",
@@ -160,8 +204,10 @@ func calculateAttacks(state *State) []Attack {
         }
     }
 
-    // --------- reinforcements along the neutral border
+    return attacks, newly_captured
+}
 
+func border_reinforcement_moves(state *State, attacks []Attack, newly_captured map[int64]bool) []Attack {
     ideal_destinations := ourBorderRegionsWithTheEnemy(state)
     regionToIdeal := make(map[int64]bool)
     for _, region := range ideal_destinations {
@@ -233,45 +279,6 @@ func calculateAttacks(state *State) []Attack {
             region.armies -= armies_to_move
             armiesPlaced[best_destination.id] += armies_to_move
 
-        }
-    }
-
-    return attacks
-}
-
-func reinforcements(state *State, attacks []Attack) []Attack {
-    move_to := ourBorderRegions(state)
-    considered := make(map[int64]bool)
-    for _, region := range move_to {
-        considered[region.id] = true
-    }
-
-    for {
-        if len(move_to) == 0 {
-            break
-        }
-
-        region := move_to[0]
-        move_to = move_to[1:]
-
-        for _, neighbour := range region.neighbours {
-            if neighbour.owner != "us" {
-                continue
-            }
-
-            if considered[neighbour.id] {
-                continue
-            }
-
-            if neighbour.armies > 1 {
-                attacks = append(attacks, Attack{
-                    region_from: neighbour,
-                    region_to: region,
-                    armies: neighbour.armies - 1})
-            }
-
-            considered[neighbour.id] = true
-            move_to = append(move_to, neighbour)
         }
     }
 
