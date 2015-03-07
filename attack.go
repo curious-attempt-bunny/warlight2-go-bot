@@ -1,8 +1,11 @@
 package main
 
 import "math"
+import "fmt"
+import "os"
 
 func placements(state *State) []Placement {
+    fmt.Fprintln(os.Stderr, "Placements:")
     last_placements := []Placement{}
 
     armies_remaining := state.starting_armies
@@ -32,7 +35,6 @@ func placements(state *State) []Placement {
     }
 
     if region == nil {
-        armies_needed := state.starting_armies
         for {
             superRegionScore := make(map[int64]float64)
             for _, super_region := range state.super_regions {
@@ -41,6 +43,7 @@ func placements(state *State) []Placement {
                 enemy_neighbours_in_super_region := int64(0)
 
                 for _, subregion := range super_region.regions {
+                    // fmt.Fprintf(os.Stderr, "  Sub region %d owned by %s with %d armies\n", subregion.id, subregion.owner, subregion.armies)
                     if subregion.owner == "them" {
                         enemy_armies_in_super_region += subregion.armies
                         enemy_neighbours_in_super_region++
@@ -51,42 +54,74 @@ func placements(state *State) []Placement {
 
                 score := float64(0)
 
+                // fmt.Fprintf(os.Stderr, "  neutral_armies_in_super_region %d enemy_armies_in_super_region %d\n",
+                //         neutral_armies_in_super_region, enemy_armies_in_super_region)
+
                 if !(neutral_armies_in_super_region == 0 && enemy_armies_in_super_region == 0) {
-                    score := float64(super_region.reward)
+                    score = float64(super_region.reward)
 
                     cost := float64(neutral_armies_in_super_region + 3*enemy_armies_in_super_region)
                     cost = math.Pow(cost, 1.01) // inflate larger costs
-                    score = score / cost
+                    score = 10*score / cost
 
                     score += float64(enemy_neighbours_in_super_region)*0.001 // prefer neighbouring more to attack
                 }
 
                 superRegionScore[super_region.id] = score
+
+                fmt.Fprintf(os.Stderr, "Super region %d scores %g\n", super_region.id, score)
             }
 
+            armies_to_place := int64(0)
+            armies_to_attack_with := int64(0)
             best_score := float64(0)
+            region = nil
+            var attack_to *Region = nil
             for _, border_region := range ourBorderRegionsWithNeutralOnly(state) {
-                score := superRegionScore[border_region.super_region.id]
 
-                // fmt.Fprintf(os.Stderr, "Place armies at %d has score %g (%d / %d+3*%d) - super region %d (enemy neighbours in super region %d)\n",
-                //     border_region.id, score,
-                //     border_region.super_region.reward,
-                //     neutral_armies_in_super_region, enemy_armies_in_super_region,
-                //     border_region.super_region.id,
-                //     enemy_neighbours_in_super_region)
-                if region == nil || score > best_score {
-                    region = border_region
-                    best_score = score
+                for _, neighbour := range border_region.neighbours {
+                    if neighbour.owner == "neutral" {
+                        armies_to_kill := 2 * neighbour.armies
+                        armies_needed := armies_to_kill - border_region.armies
+                        if armies_needed < 0 {
+                            armies_needed = 0
+                        }
+                        if armies_needed <= armies_remaining {
+                            score := superRegionScore[neighbour.super_region.id]
+                            score = score*score / float64(1+armies_needed)
+
+                            fmt.Fprintf(os.Stderr, "Considering %d to %d need %d armies and have %d remaining (score %g).\n",
+                                border_region.id, neighbour.id, armies_needed, armies_remaining, score)
+
+                            if region == nil || score > best_score {
+                                best_score = score
+                                region = border_region
+                                attack_to = neighbour
+                                armies_to_place = armies_needed
+                                armies_to_attack_with = armies_to_kill-1
+
+                                // fmt.Fprintf(os.Stderr, "Like %d to %d need %d armies and have %d remaining.\n",
+                                //     border_region.id, neighbour.id, armies_needed, armies_remaining)
+                            }
+                        }
+                    }
                 }
             }
 
             if region == nil {
                 break
-            } else {
-                region.armies += armies_needed
-                placement := Placement{region: region, armies: armies_needed}
+            }
+
+            fmt.Fprintf(os.Stderr, "Placing %d armies at %d so that we can attack %d (SR %d) with %d armies.\n",
+                armies_to_place, region.id, attack_to.id, attack_to.super_region.id, armies_to_attack_with)
+            region.armies -= armies_to_attack_with
+            attack_to.owner = "us"
+
+            if armies_to_place > 0 {
+                region.armies += armies_to_place
+                placement := Placement{region: region, armies: armies_to_place}
                 last_placements = append(last_placements, placement)
-                armies_remaining -= armies_needed
+                armies_remaining -= armies_to_place
             }
 
             if armies_remaining == 0 {
