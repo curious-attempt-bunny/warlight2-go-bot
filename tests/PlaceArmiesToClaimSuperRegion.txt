@@ -54,3 +54,4 @@ Output from your bot: "player1 place_armies 7 5,"
 
 # Valid: [player1 place_armies 8 5,]
 # Valid: [player1 place_armies 8 2,player1 place_armies 7 2,]
+# Valid: [player1 place_armies 7 2,player1 place_armies 8 2,]

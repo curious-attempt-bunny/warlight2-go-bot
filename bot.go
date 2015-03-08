@@ -381,6 +381,19 @@ func isSuperRegionPossiblyOwnedByTheEnemy(super_region *SuperRegion) bool {
     return possibly_owned_by_the_enemy
 }
 
+func isSuperRegionOwnedByUs(super_region *SuperRegion) bool {
+    owned_by_us := true
+
+    for _, region := range super_region.regions {
+        if region.owner != "us" {
+            owned_by_us = false
+            break
+        }
+    }
+
+    return owned_by_us
+}
+
 type Placement struct {
     region *Region
     armies int64

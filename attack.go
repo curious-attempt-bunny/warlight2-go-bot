@@ -18,21 +18,39 @@ func placements(state *State) []Placement {
     var region *Region
     region = nil
     bordered_enemies := 0
+    income_delta := int64(0)
 
     for _, border_region := range our_regions {
         bordered := 0
         max_enemy_armies := int64(0)
+        their_super_regions := make(map[int64]bool)
         for _, neighbour := range border_region.neighbours {
             if neighbour.owner == "them" {
                 bordered += 1
                 if neighbour.armies > max_enemy_armies {
                     max_enemy_armies = neighbour.armies
                 }
+                their_super_regions[neighbour.super_region.id] = true
+            }
+        }
+        their_income := int64(0)
+        our_income := int64(0)
+        if isSuperRegionOwnedByUs(border_region.super_region) {
+            our_income = border_region.super_region.reward
+        }
+        for super_region_id, _ := range their_super_regions {
+            super_region := state.super_regions[super_region_id]
+            if isSuperRegionPossiblyOwnedByTheEnemy(super_region) {
+                their_income += super_region.reward
             }
         }
 
-        if region == nil || bordered > bordered_enemies ||
-            (bordered == bordered_enemies && border_region.id > region.id) { // repeatability
+        // fmt.Fprintf(os.Stderr, "Considerd border region %d (our_income %d their_income %d bordered_enemies %d)\n",
+        //     border_region.id, our_income, their_income, bordered_enemies)
+        if region == nil || (our_income + their_income > income_delta) ||
+            (our_income + their_income == income_delta &&
+                (bordered > bordered_enemies ||
+                (bordered == bordered_enemies && border_region.id > region.id))) { // repeatability
             // we don't have to build up crazy army sizes:
             // e.g. http://theaigames.com/competitions/warlight-ai-challenge-2/games/54fb795b4b5ab25e309e1fda
             if border_region.armies > 20 && float64(border_region.armies) > 0.75*float64(max_enemy_armies+5) {
@@ -41,6 +59,7 @@ func placements(state *State) []Placement {
             } else {
                 region = border_region
                 bordered_enemies = bordered
+                income_delta = our_income + their_income
             }
 
             // fmt.Fprintf(os.Stderr, "Like border region %d (bordered_enemies %d)\n", region.id, bordered_enemies)
