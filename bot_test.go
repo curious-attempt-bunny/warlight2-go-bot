@@ -35,6 +35,7 @@ func TestBot(t *testing.T) {
   test(t, "tests/PlaceArmiesOnMostImportantBorder.txt")
   test(t, "tests/PlaceArmiesOnTheMostValuableBorder.txt")
   test(t, "tests/CompleteRegionAndHold.txt")
+  test(t, "tests/BetterStartingRegions.txt")
   //
   // test(t, "tests/TransferTroopsToWhereTheyAreMostNeeded.txt")
 }

@@ -108,15 +108,11 @@ func main() {
                 armies = -2 // account for the one that is claimed
                 for _, r := range region.super_region.regions {
                     armies += r.armies
+                    if r.armies == 6 {
+                        armies += 6
+                    }
                 }
-                // 2 armies -> 1
-                // 4 armies -> 2
-                // 6 armies -> 4
-                // 8 armies -> 5
                 weighting := math.Floor(float64(armies)/2.0)
-                if armies >= 6 {
-                    weighting += 1
-                }
 
                 neighbours_in_super_region := 0
                 for _, neighbour := range region.neighbours {
