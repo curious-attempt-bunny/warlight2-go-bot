@@ -18,7 +18,7 @@ func placements(state *State) []Placement {
     var region *Region
     region = nil
     bordered_enemies := 0
-    income_delta := int64(0)
+    income_delta := float64(0)
 
     for _, border_region := range our_regions {
         bordered := 0
@@ -33,19 +33,27 @@ func placements(state *State) []Placement {
                 their_super_regions[neighbour.super_region.id] = true
             }
         }
-        their_income := int64(0)
-        our_income := int64(0)
+        their_income := float64(0)
+        our_income := float64(0)
         if isSuperRegionOwnedByUs(border_region.super_region) {
-            our_income = border_region.super_region.reward
+            our_income = float64(border_region.super_region.reward)
+        } else {
+            we_own := 0
+            for _, subregion := range border_region.super_region.regions {
+                if subregion.owner == "us" {
+                    we_own++
+                }
+            }
+            our_income = float64(border_region.super_region.reward) * float64(we_own) / math.Pow(float64(len(border_region.super_region.regions)), 1.50)
         }
         for super_region_id, _ := range their_super_regions {
             super_region := state.super_regions[super_region_id]
             if isSuperRegionPossiblyOwnedByTheEnemy(super_region) {
-                their_income += super_region.reward
+                their_income += float64(super_region.reward)
             }
         }
 
-        // fmt.Fprintf(os.Stderr, "Considerd border region %d (our_income %d their_income %d bordered_enemies %d)\n",
+        // fmt.Fprintf(os.Stderr, "Considerd border region %d (our_income %g their_income %g bordered_enemies %d)\n",
         //     border_region.id, our_income, their_income, bordered_enemies)
         if region == nil || (our_income + their_income > income_delta) ||
             (our_income + their_income == income_delta &&
@@ -266,7 +274,7 @@ func attack_moves(state *State, attacks []Attack) ([]Attack, map[int64]bool) {
                     continue;
                 }
                 if neighbour.owner != "us" {
-                    candidate_value := float64(neighbour.armies)
+                    candidate_value := float64(neighbour.armies)/4
                     if neighbour.owner == "neutral" {
                         enemy_armies_in_super_region := int64(0)
                         neutral_armies_in_super_region := int64(0)
@@ -291,14 +299,15 @@ func attack_moves(state *State, attacks []Attack) ([]Attack, map[int64]bool) {
                     if neighbour.owner == "neutral" {
                         attackable = (region.armies >= 3 && neighbour.armies == 1) ||
                             (region.armies > 3 && region.armies >= 2*neighbour.armies)
-                        if bordering_enemy {
-                            attackable = false // never attack neutral when enemy is present
-                        }
+                        // if bordering_enemy {
+                        //     attackable = false // never attack neutral when enemy is present
+                        // }
                     } else if neighbour.owner == "them" {
-                        if neighbour.armies < largest_enemy {
-                            attackable = false // only attack the largest neighbouring army group
-                        }
+                        // if neighbour.armies < largest_enemy {
+                        //     attackable = false // only attack the largest neighbouring army group
+                        // }
                     }
+                    _ = bordering_enemy
 
                     neighbour_bordering_enemy := false
                     for _, n := range neighbour.neighbours {
@@ -312,7 +321,7 @@ func attack_moves(state *State, attacks []Attack) ([]Attack, map[int64]bool) {
                         candidate_value -= 0.001 // tie breaker
                     }
 
-                    // fmt.Fprintf(os.Stderr, "%d (%d - %s) -> %d (%d - %s) attackable %t value %d best_value %d\n",
+                    // fmt.Fprintf(os.Stderr, "%d (%d - %s) -> %d (%d - %s) attackable %t value %g best_value %g\n",
                     //     region.id, region.armies, region.owner,
                     //     neighbour.id, neighbour.armies, neighbour.owner,
                     //     attackable, candidate_value, value)

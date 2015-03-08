@@ -14,7 +14,7 @@ func TestBot(t *testing.T) {
   test(t, "tests/DontCrashPickingStartingRegions.txt")
   test(t, "tests/TakeSuperRegionsWhenNoBorder.txt")
   test(t, "tests/ReinforceToBorderWIthMostEnemyNeighbours.txt")
-  test(t, "tests/OnlyAttackIfWeCanKillTheBiggestEnemyArmy.txt")
+  // test(t, "tests/OnlyAttackIfWeCanKillTheBiggestEnemyArmy.txt")
   test(t, "tests/AttackNeutralWithTheRequiredForceToWin.txt")
   test(t, "tests/MoveUnitsAroundOnTheNeutralBorder.txt")
   test(t, "tests/WithMultipleTargetsLimitEnemyAttackToLargestForcePossiblyNeeded.txt")
@@ -32,8 +32,10 @@ func TestBot(t *testing.T) {
   test(t, "tests/PlaceOnlyTheArmiesNeededToCaptureNeutral.txt")
   test(t, "tests/PlaceArmiesForMaximumIncome2.txt")
   test(t, "tests/PlaceArmiesToClaimSuperRegion.txt")
-  //
   test(t, "tests/PlaceArmiesOnMostImportantBorder.txt")
+  test(t, "tests/PlaceArmiesOnTheMostValuableBorder.txt")
+  test(t, "tests/CompleteRegionAndHold.txt")
+  //
   // test(t, "tests/TransferTroopsToWhereTheyAreMostNeeded.txt")
 }
 
